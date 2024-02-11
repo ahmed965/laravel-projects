@@ -14,8 +14,6 @@ return new class extends Migration {
             $table->id()->primary;
             $table->string('name');
             $table->integer('number_of_repetitions');
-            $table->unsignedBigInteger('training_plan_id');
-            $table->foreign('training_plan_id')->references('id')->on('training_plans')->onDelete('cascade');
         });
     }
 
