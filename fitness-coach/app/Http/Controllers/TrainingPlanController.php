@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\TrainingPlan;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
 use App\Http\Requests\TraingPlanRequest;
+use App\Models\TrainingPlan;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class TrainingPlanController extends Controller
 {
@@ -22,23 +22,31 @@ class TrainingPlanController extends Controller
         );
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(TraingPlanRequest $request): JsonResponse
     {
-       $request = $request->all();
-       $exercices = $request['exercices'];
-       unset($request['exercices']);
-       $data =  $this->trainingPlan->create($request);
+        $request = $request->validated();
+        $exercices = $request['exercices'];
+        unset($request['exercices']);
+        $trainingPlan = $this->trainingPlan->create($request);
+        $trainingPlan->exercices()->attach($exercices);
 
-       $exercices[0]['training_plan_id'] = $data->id;
-
-       $this->trainingPlan->exercices()->attach($exercices);
-
-       return response()->json(['success' => true]);
+        return response()->json([
+            'message' => 'training plan with exercises is successfully added',
+        ]);
     }
 
-    public function show(TrainingPlan $trainingPlan)
+    public function show(int $id): JsonResponse
     {
-        //
+        $trainingPlan = TrainingPlan::with('exercices')
+            ->where('id', $id)
+            ->first();
+        if (!$trainingPlan instanceof TrainingPlan) {
+            return response()->json(
+                ['message' => 'training plan with id ' . $id . ' is not found'],
+                404
+            );
+        }
+        return response()->json(['training plan' => $trainingPlan]);
     }
 
     public function update(Request $request, TrainingPlan $trainingPlan)

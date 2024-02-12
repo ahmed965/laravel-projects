@@ -27,6 +27,8 @@ class TraingPlanRequest extends FormRequest
             'goal' => 'required|string',
             'started_at' => 'date',
             'finished_at' => 'date',
+            'exercices' => 'required|array',
+            'exercices.*' => 'int',
         ];
     }
 }
