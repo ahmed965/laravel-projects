@@ -6,19 +6,15 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\TraingPlanRequest;
 use App\Models\TrainingPlan;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class TrainingPlanController extends Controller
 {
-    public function __construct(private TrainingPlan $trainingPlan)
-    {
-    }
+    private const MESSAGE = 'message';
 
     public function index(): JsonResponse
     {
         return response()->json(
-            ['training-plans' => TrainingPlan::with('exercices')->get()],
-            200
+            ['training-plans' => TrainingPlan::with('exercices')->get()]
         );
     }
 
@@ -27,12 +23,13 @@ class TrainingPlanController extends Controller
         $request = $request->validated();
         $exercices = $request['exercices'];
         unset($request['exercices']);
-        $trainingPlan = $this->trainingPlan->create($request);
+        $trainingPlan = TrainingPlan::create($request);
         $trainingPlan->exercices()->attach($exercices);
 
-        return response()->json([
-            'message' => 'training plan with exercises is successfully added',
-        ]);
+        return response()->json(
+            [self::MESSAGE => 'training plan with exercises is successfully created'],
+            201
+        );
     }
 
     public function show(int $id): JsonResponse
@@ -42,20 +39,35 @@ class TrainingPlanController extends Controller
             ->first();
         if (!$trainingPlan instanceof TrainingPlan) {
             return response()->json(
-                ['message' => 'training plan with id ' . $id . ' is not found'],
+                [self::MESSAGE => 'training plan with id ' . $id . ' is not found'],
                 404
             );
         }
         return response()->json(['training plan' => $trainingPlan]);
     }
 
-    public function update(Request $request, TrainingPlan $trainingPlan)
+    public function update(TraingPlanRequest $request, int $id): JsonResponse
     {
-        //
+        $trainingPlan = TrainingPlan::findOrfail($id);
+        $request = $request->validated();
+        $exercices = $request['exercices'];
+        unset($request['exercices']);
+        $trainingPlan->update($request);
+        $trainingPlan->exercices()->sync($exercices);
+
+        return response()->json([
+            self::MESSAGE => 'training plan id ' . $id . ' with exercises is successfully updated',
+        ]);
     }
 
-    public function destroy(TrainingPlan $trainingPlan)
+    public function destroy(int $id): JsonResponse
     {
-        //
+        $trainingPlan = TrainingPlan::findOrfail($id);
+        $trainingPlan->exercices()->detach();
+        $trainingPlan->delete();
+
+        return response()->json([
+            self::MESSAGE => 'training plan id ' . $id . ' with exercises is successfully deleted',
+        ]);
     }
 }
