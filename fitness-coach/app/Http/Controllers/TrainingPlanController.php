@@ -43,6 +43,7 @@ class TrainingPlanController extends Controller
                 404
             );
         }
+        
         return response()->json(['training plan' => $trainingPlan]);
     }
 
